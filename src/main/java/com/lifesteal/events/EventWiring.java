@@ -67,7 +67,7 @@ public class EventWiring {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             ServerPlayerEntity player = handler.player;
             if (CombatManager.isInCombat(player)) {
-                CombatDummy.spawn(player);
+                CombatDummy.spawn(player, server);
             }
         });
 

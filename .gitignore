@@ -38,3 +38,17 @@ hs_err_*.log
 replay_*.log
 *.hprof
 *.jfr
+
+# scratch/temp files
+Test.java
+*.log
+errors.txt
+mappings/
+net/
+fabric-entity-events-v1.mixins.json
+fabric.mod.json
+LICENSE-fabric-entity-events-v1
+
+# claude
+.claude/
+.specs/

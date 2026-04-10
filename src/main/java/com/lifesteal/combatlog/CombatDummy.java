@@ -19,9 +19,9 @@ import java.util.*;
 public class CombatDummy {
     private static final Map<UUID, List<ItemStack>> loggedOutInventories = new HashMap<>();
 
-    public static void spawn(ServerPlayerEntity player) {
-        // Use getWorld() but handle casting to Entity first if needed
-        ServerWorld world = (ServerWorld) player.getEntityWorld();
+    public static void spawn(ServerPlayerEntity player, MinecraftServer server) {
+        ServerWorld world = server.getWorld(player.getEntityWorld().getRegistryKey());
+        if (world == null) return;
 
         VillagerEntity dummy = new VillagerEntity(EntityType.VILLAGER, world);
         dummy.setPos(player.getX(), player.getY(), player.getZ());
