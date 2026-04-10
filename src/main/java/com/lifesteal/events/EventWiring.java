@@ -34,7 +34,6 @@ public class EventWiring {
                 MinecraftServer server = killer.getEntityWorld().getServer();
                 if (server != null) {
                     HeartPersistentState state = HeartPersistentState.getServerState(server);
-                    int victimKills = state.getKills(player.getUuid());
 
                     // Update victim hearts directly in state (bypasses the null-server pitfall)
                     int victimHearts = state.getHearts(player.getUuid(), ConfigManager.getConfig().starting_hearts);
@@ -44,11 +43,15 @@ public class EventWiring {
                         server.execute(() -> HeartManager.triggerBan(player));
                     }
 
-                    HeartManager.addHearts(killer, 1 + victimKills);
-                    state.setKills(killer.getUuid(), state.getKills(killer.getUuid()) + 1);
-                    state.setKills(player.getUuid(), 0);
+                    int bonus = 0;
+                    if (ConfigManager.getConfig().bonus_hearts_on_kill) {
+                        bonus = state.getKills(player.getUuid());
+                        state.setKills(killer.getUuid(), state.getKills(killer.getUuid()) + 1);
+                        state.setKills(player.getUuid(), 0);
+                    }
 
-                    killer.sendMessage(Text.literal("§c+1 Heart" + (victimKills > 0 ? " and bonus +" + victimKills + " from victim's stats!" : "")), true);
+                    HeartManager.addHearts(killer, 1 + bonus);
+                    killer.sendMessage(Text.literal("§c+1 Heart" + (bonus > 0 ? " and bonus +" + bonus + " from victim's kill streak!" : "")), true);
                 }
             }
             return true;
