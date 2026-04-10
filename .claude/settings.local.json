@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew compileJava)",
+      "Bash(grep:*)",
+      "Bash(./gradlew build:*)",
+      "Read(//c/Users/eirik/.claude/**)"
+    ]
+  }
+}

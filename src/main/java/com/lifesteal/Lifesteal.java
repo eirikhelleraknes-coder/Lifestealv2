@@ -15,10 +15,26 @@ public class Lifesteal implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		// This code runs as soon as Minecraft is in a mod-load-ready state.
-		// However, some things (like resources) may still be uninitialized.
-		// Proceed with mild caution.
+		LOGGER.info("Initializing Lifesteal Mod...");
 
-		LOGGER.info("Hello Fabric world!");
+		// Load Configuration
+		com.lifesteal.config.ConfigManager.load();
+
+		// Register Items
+		com.lifesteal.items.ModItems.registerItems();
+
+		// Register Events
+		com.lifesteal.events.EventWiring.registerEvents();
+
+		// Register Commands
+		com.lifesteal.commands.LifestealCommand.register();
+
+		// Register Recipes
+		com.lifesteal.items.ModRecipes.registerRecipes();
+
+		// Register Combat Ticks
+		com.lifesteal.combatlog.CombatManager.registerTick();
+
+		LOGGER.info("Lifesteal Mod initialized successfully!");
 	}
 }

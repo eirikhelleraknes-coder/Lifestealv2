@@ -2,14 +2,14 @@
 	"schemaVersion": 1,
 	"id": "lifesteal",
 	"version": "${version}",
-	"name": "lifesteal",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"name": "Lifesteal",
+	"description": "A server-side lifesteal mod with combat logging and a custom revival system.",
 	"authors": [
-		"Me!"
+		"eirikhelleraknes-coder"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://github.com/eirikhelleraknes-coder/lifesteal",
+		"sources": "https://github.com/eirikhelleraknes-coder/lifesteal"
 	},
 	"license": "CC0-1.0",
 	"icon": "assets/lifesteal/icon.png",
@@ -17,22 +17,16 @@
 	"entrypoints": {
 		"main": [
 			"com.lifesteal.Lifesteal"
-		],
-		"client": [
-			"com.lifesteal.client.LifestealClient"
 		]
 	},
 	"mixins": [
-		"lifesteal.mixins.json",
-		{
-			"config": "lifesteal.client.mixins.json",
-			"environment": "client"
-		}
+		"lifesteal.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.18.6",
 		"minecraft": "~1.21.11",
 		"java": ">=21",
-		"fabric-api": "*"
+		"fabric-api": "*",
+		"sgui": "*"
 	}
 }
