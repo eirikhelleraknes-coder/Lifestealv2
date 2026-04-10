@@ -97,23 +97,36 @@ public class LifestealCommand {
     private static int gift(ServerCommandSource source, Collection<GameProfile> targets, int amount) {
         ServerPlayerEntity sender = source.getPlayer();
         if (sender == null) return 0;
-        
+
         int senderHearts = HeartManager.getPlayerHearts(sender);
         if (senderHearts <= amount) {
             source.sendError(Text.literal("You don't have enough hearts to gift!"));
             return 0;
         }
-        
+
+        int maxHearts = ConfigManager.getConfig().max_hearts;
+
         for (GameProfile profile : targets) {
             ServerPlayerEntity targetPlayer = source.getServer().getPlayerManager().getPlayer(profile.id());
-            if (targetPlayer != null) {
-                HeartManager.removeHearts(sender, amount);
-                HeartManager.addHearts(targetPlayer, amount);
-                source.sendFeedback(() -> Text.literal("§aGifted " + amount + " hearts to " + targetPlayer.getName().getString()), false);
-                targetPlayer.sendMessage(Text.literal("§aYou received " + amount + " hearts from " + sender.getName().getString()));
-            } else {
+            if (targetPlayer == null) {
                 source.sendError(Text.literal("Target player must be online to receive hearts."));
+                continue;
             }
+
+            int targetHearts = HeartManager.getPlayerHearts(targetPlayer);
+            int canReceive = (maxHearts > 0) ? Math.min(amount, maxHearts - targetHearts) : amount;
+
+            if (canReceive <= 0) {
+                source.sendError(Text.literal(targetPlayer.getName().getString() + " is already at max hearts!"));
+                continue;
+            }
+
+            final int actual = canReceive;
+            HeartManager.removeHearts(sender, actual);
+            HeartManager.addHearts(targetPlayer, actual);
+            source.sendFeedback(() -> Text.literal("§aGifted " + actual + " heart(s) to " + targetPlayer.getName().getString() +
+                    (actual < amount ? " §e(capped at max)" : "")), false);
+            targetPlayer.sendMessage(Text.literal("§aYou received " + actual + " heart(s) from " + sender.getName().getString()));
         }
         return 1;
     }

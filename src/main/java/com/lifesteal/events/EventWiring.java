@@ -2,6 +2,7 @@ package com.lifesteal.events;
 
 import com.lifesteal.combatlog.CombatDummy;
 import com.lifesteal.combatlog.CombatManager;
+import com.lifesteal.config.ConfigManager;
 import com.lifesteal.hearts.HeartManager;
 import com.lifesteal.hearts.HeartPersistentState;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityCombatEvents;
@@ -29,18 +30,25 @@ public class EventWiring {
 
         ServerPlayerEvents.ALLOW_DEATH.register((player, damageSource, damageAmount) -> {
             if (damageSource.getAttacker() instanceof ServerPlayerEntity killer) {
+                // Use killer's server reference — victim's world may return null during death
                 MinecraftServer server = killer.getEntityWorld().getServer();
                 if (server != null) {
                     HeartPersistentState state = HeartPersistentState.getServerState(server);
                     int victimKills = state.getKills(player.getUuid());
-                    int bonusHearts = victimKills;
 
-                    HeartManager.removeHearts(player, 1);
-                    HeartManager.addHearts(killer, 1 + bonusHearts);
+                    // Update victim hearts directly in state (bypasses the null-server pitfall)
+                    int victimHearts = state.getHearts(player.getUuid(), ConfigManager.getConfig().starting_hearts);
+                    int newVictimHearts = Math.max(0, victimHearts - 1);
+                    state.setHearts(player.getUuid(), newVictimHearts);
+                    if (newVictimHearts == 0) {
+                        server.execute(() -> HeartManager.triggerBan(player));
+                    }
+
+                    HeartManager.addHearts(killer, 1 + victimKills);
                     state.setKills(killer.getUuid(), state.getKills(killer.getUuid()) + 1);
                     state.setKills(player.getUuid(), 0);
 
-                    killer.sendMessage(Text.literal("§c+1 Heart" + (bonusHearts > 0 ? " and bonus +" + bonusHearts + " from victim's stats!" : "")), true);
+                    killer.sendMessage(Text.literal("§c+1 Heart" + (victimKills > 0 ? " and bonus +" + victimKills + " from victim's stats!" : "")), true);
                 }
             }
             return true;
