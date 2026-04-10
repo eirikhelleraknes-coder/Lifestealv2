@@ -12,8 +12,10 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.passive.VillagerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 
 public class EventWiring {
@@ -84,21 +86,33 @@ public class EventWiring {
                 if (ConfigManager.getConfig().use_dummy_on_clog) {
                     CombatDummy.spawn(player, server);
                 } else {
-                    server.execute(() -> {
-                        // Award heart to last attacker before killing the logger
-                        if (player.getAttacker() instanceof ServerPlayerEntity lastAttacker) {
-                            HeartPersistentState state = HeartPersistentState.getServerState(server);
-                            int loggerHearts = state.getHearts(player.getUuid(), ConfigManager.getConfig().starting_hearts);
-                            int newLoggerHearts = Math.max(0, loggerHearts - 1);
-                            state.setHearts(player.getUuid(), newLoggerHearts);
-                            HeartManager.addHearts(lastAttacker, 1);
-                            lastAttacker.sendMessage(Text.literal("§c+1 Heart (Combat Log Kill)"), true);
-                            if (newLoggerHearts == 0) {
-                                HeartManager.triggerBan(player);
+                    // Award heart to last attacker
+                    if (player.getAttacker() instanceof ServerPlayerEntity lastAttacker) {
+                        HeartManager.addHearts(lastAttacker, 1);
+                        lastAttacker.sendMessage(Text.literal("§c+1 Heart (Combat Log Kill)"), true);
+                    }
+
+                    // Remove heart from logger directly in state
+                    HeartPersistentState state = HeartPersistentState.getServerState(server);
+                    int loggerHearts = state.getHearts(player.getUuid(), ConfigManager.getConfig().starting_hearts);
+                    int newLoggerHearts = Math.max(0, loggerHearts - 1);
+                    state.setHearts(player.getUuid(), newLoggerHearts);
+
+                    // Drop all inventory items at their location
+                    ServerWorld world = server.getWorld(player.getEntityWorld().getRegistryKey());
+                    if (world != null) {
+                        for (int i = 0; i < player.getInventory().size(); i++) {
+                            ItemStack stack = player.getInventory().getStack(i);
+                            if (!stack.isEmpty()) {
+                                player.dropStack(world, stack);
                             }
                         }
-                        player.kill(server.getOverworld());
-                    });
+                        player.getInventory().clear();
+                    }
+
+                    if (newLoggerHearts == 0) {
+                        HeartManager.triggerBan(player);
+                    }
                 }
             }
         });
