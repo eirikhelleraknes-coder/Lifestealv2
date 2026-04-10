@@ -29,7 +29,10 @@ public class EventWiring {
         });
 
         ServerPlayerEvents.ALLOW_DEATH.register((player, damageSource, damageAmount) -> {
-            if (damageSource.getAttacker() instanceof ServerPlayerEntity killer) {
+            // Check direct attacker first, fall back to last entity that hit the victim
+            net.minecraft.entity.Entity rawAttacker = damageSource.getAttacker();
+            if (rawAttacker == null) rawAttacker = player.getAttacker();
+            if (rawAttacker instanceof ServerPlayerEntity killer) {
                 // Use killer's server reference — victim's world may return null during death
                 MinecraftServer server = killer.getEntityWorld().getServer();
                 if (server != null) {
