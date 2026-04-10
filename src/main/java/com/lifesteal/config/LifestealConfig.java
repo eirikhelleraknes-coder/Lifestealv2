@@ -6,4 +6,5 @@ public class LifestealConfig {
     public int combat_timer_seconds = 60;
     public int dummy_duration_seconds = 30;
     public boolean bonus_hearts_on_kill = false; // award extra hearts based on victim's kill streak
+    public boolean use_dummy_on_clog = true; // if false, instantly kill the player on combat log instead of spawning a dummy
 }

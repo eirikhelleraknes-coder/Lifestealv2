@@ -77,11 +77,29 @@ public class EventWiring {
             }
         });
 
-        // On disconnect: if player is in combat, spawn a combat dummy
+        // On disconnect: if player is in combat, spawn a dummy or kill them instantly
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             ServerPlayerEntity player = handler.player;
             if (CombatManager.isInCombat(player)) {
-                CombatDummy.spawn(player, server);
+                if (ConfigManager.getConfig().use_dummy_on_clog) {
+                    CombatDummy.spawn(player, server);
+                } else {
+                    server.execute(() -> {
+                        // Award heart to last attacker before killing the logger
+                        if (player.getAttacker() instanceof ServerPlayerEntity lastAttacker) {
+                            HeartPersistentState state = HeartPersistentState.getServerState(server);
+                            int loggerHearts = state.getHearts(player.getUuid(), ConfigManager.getConfig().starting_hearts);
+                            int newLoggerHearts = Math.max(0, loggerHearts - 1);
+                            state.setHearts(player.getUuid(), newLoggerHearts);
+                            HeartManager.addHearts(lastAttacker, 1);
+                            lastAttacker.sendMessage(Text.literal("§c+1 Heart (Combat Log Kill)"), true);
+                            if (newLoggerHearts == 0) {
+                                HeartManager.triggerBan(player);
+                            }
+                        }
+                        player.kill(server.getOverworld());
+                    });
+                }
             }
         });
 
